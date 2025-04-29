@@ -146,7 +146,7 @@ def train(config):
             if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 patience_counter = 0
-                torch.save(model, f'saved_models/{config.model_name}.pth')
+                torch.save(model.state_dict(), f'saved_models/{config.model_name}_params.pth')
             else:
                 patience_counter += 1
                 if patience_counter >= config.patience:
