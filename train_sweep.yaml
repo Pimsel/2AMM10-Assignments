@@ -1,0 +1,19 @@
+# Program to run
+program: train.py
+
+# Search method (grid, random, bayes)
+method: grid
+
+# Project (!define based on model to-be-tested!)
+project: BasicCNN
+entity: 
+
+# Metric to optimize
+metric: 
+  name: val_loss
+  goal: minimize
+
+# Parameter spaces to search
+parameters:
+  learning_rate:
+    values: [5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2]

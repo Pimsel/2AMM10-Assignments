@@ -16,7 +16,7 @@ model_dict = {
     "MobileNetV3": MobileNetV3(num_classes=num_classes)
 }
 
-def trainer(config):
+def train(config):
     with wandb.init(project=config.model_name, config=config):
         config = wandb.config
 
@@ -112,4 +112,4 @@ def parse_args():
 
 if __name__ == '__main__':
     parse_args()
-    trainer(default_config)
+    train(default_config)
