@@ -1,14 +1,20 @@
+# For train parsing
 import argparse, os
 from types import SimpleNamespace
+# For data prep
+import kagglehub
+import pandas as pd
+from PIL import Image
+# For model/train functionality
 import torch
 import torch.optim as optim
-from torchvision.transforms import ToTensor
-from torch.utils.data import DataLoader
+import torchvision.transforms as transforms
+from torch.utils.data import Dataset, DataLoader
 import wandb
 import tqdm
 from models import *
 
-num_classes = ...
+num_classes = 39
 model_dict = {
     "BasicCNN": BasicCNN(num_classes=num_classes),
     "IntermediateCNN": IntermediateCNN(num_classes=num_classes),
@@ -16,19 +22,60 @@ model_dict = {
     "MobileNetV3": MobileNetV3(num_classes=num_classes)
 }
 
+# Retrieves data from local cache or downloads if not cached yet
+dataset_path = kagglehub.dataset_download("paramaggarwal/fashion-product-images-small")
+img_dir = os.path.join(dataset_path,"images")
+
+class FashionDataset(Dataset):
+    def __init__(self, csv_file, img_dir,column_class="articleTypeId", transform=None):
+        """
+        Args:
+            csv_file (str): Path to the CSV file with labels.
+            img_dir (str): Directory with all the images.
+            transform (callable, optional): Optional transform to be applied on a sample.
+        """
+        self.df = pd.read_csv(csv_file)  # load CSV file
+        self.img_dir = img_dir  # image folder path
+        self.transform = transform  # image transformations
+        self.targets = list(self.df[column_class].values)
+
+
+    def __len__(self):
+        return len(self.targets)
+
+    def __getitem__(self, idx):
+        img_name = os.path.join(self.img_dir, f"{self.df.loc[idx,'imageId']}.jpg")  # Get image filename
+        image = Image.open(img_name).convert("RGB")  # Load image
+
+        if self.transform:
+            image = self.transform(image)  # Apply transformations
+
+        return image, self.targets[idx]
+
+transform = transforms.Compose([
+    transforms.ToTensor()
+])
+
+train_dataset = FashionDataset('dataset/presplit_train/trainsplit.csv', img_dir, transform=transform)
+val_dataset = FashionDataset('dataset/presplit_train/valsplit.csv', img_dir, transform=transform)
+
+
 def train(config):
     with wandb.init(project=config.model_name, config=config):
         config = wandb.config
 
-        #TODO prep data in DataLoader, using config.batch_size
+        # Prepare dataloaders
+        train_loader = DataLoader(train_dataset, batch_size=config.batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=config.batch_size, shuffle=False)
 
+        # Initialize model, optimizer, and loss function (criterion)
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         model = model_dict[config.model_name]
         model = model.to(device)
-
         optimizer = optim.Adam(model.parameters(), lr=config.learning_rate)
         criterion = nn.CrossEntropyLoss()
 
+        # Initialize patience variables
         best_val_loss = float("inf")
         patience_counter = 0
 
