@@ -5,7 +5,7 @@ program: train.py
 method: grid
 
 # Project (!define based on model to-be-tested!)
-project: BasicCNN
+project: ModelComparison2
 entity: 
 
 # Metric to optimize
@@ -15,5 +15,17 @@ metric:
 
 # Parameter spaces to search
 parameters:
+  model_name:
+    values: ["AdvancedCNN", "MobileNetV3"]
+  batch_size:
+    value: 128
+  optimizer:
+    values: ["SGD", "Adam"]
   learning_rate:
-    values: [5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1e-2]
+    values: [5e-4, 1e-3, 5e-3, 1e-2]
+  epochs:
+    value: 500
+  patience:
+    value: 8
+  time_logging:
+    value: True
