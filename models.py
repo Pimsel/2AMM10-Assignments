@@ -238,24 +238,23 @@ class AdvancedCNN(nn.Module):
     relevance of 'important' features while suppressing irrelevant ones.
     Test whether these efficiency-accuracy trade-offs are worthwile in the given setting.
     '''
-    def __init__(self, num_classes=1000):
+    def __init__(self, nr_filters=64, activation=nn.ReLU, num_classes=1000):
         super().__init__()
         self.features = nn.Sequential(
-            ConvBNActivation(3, 32, kernel_size=3, stride=2, activation=nn.Hardswish),
+            ConvBNActivation(3, nr_filters, kernel_size=3, stride=2, activation=activation),
             
-            DepthwiseSeparableConv(32, 64, activation=nn.Hardswish),
+            DepthwiseSeparableConv(nr_filters, nr_filters*2, activation=activation),
             nn.MaxPool2d(kernel_size=2, stride=2),
             
-            DepthwiseSeparableConv(64, 128, activation=nn.Hardswish, use_se=True),
+            DepthwiseSeparableConv(nr_filters*2, nr_filters*4, activation=activation, use_se=True),
             nn.MaxPool2d(kernel_size=2, stride=2),
             
-            DepthwiseSeparableConv(128, 256, activation=nn.Hardswish, use_se=True)
-        )
-        self.classifier = nn.Sequential(
+            DepthwiseSeparableConv(nr_filters*4, nr_filters*8, activation=activation, use_se=True),
+
             nn.AdaptiveAvgPool2d(1),
-            nn.Flatten(),
-            nn.Linear(256, num_classes)
+            nn.Flatten()
         )
+        self.classifier = nn.Linear(nr_filters*8, num_classes)
 
     def forward(self, x):
         x = self.features(x)
@@ -428,3 +427,4 @@ class MobileNetV3(nn.Module):
                 nn.init.normal_(m.weight, 0, 0.01)
                 if m.bias is not None:
                     nn.init.zeros_(m.bias)
+###-----------------------------------###

@@ -5,7 +5,7 @@ program: train.py
 method: grid
 
 # Project (!define based on model to-be-tested!)
-project: ModelComparison2
+project: AdvancedSweep
 entity: 
 
 # Metric to optimize
@@ -15,17 +15,15 @@ metric:
 
 # Parameter spaces to search
 parameters:
-  model_name:
-    values: ["AdvancedCNN", "MobileNetV3"]
   batch_size:
-    value: 128
+    value: 1028
+  nr_filters:
+    value: 64
   optimizer:
-    values: ["SGD", "Adam"]
+    value: "SGD"
   learning_rate:
-    values: [5e-4, 1e-3, 5e-3, 1e-2]
+    value: 5e-2
   epochs:
     value: 500
   patience:
-    value: 8
-  time_logging:
-    value: True
+    value: 10
