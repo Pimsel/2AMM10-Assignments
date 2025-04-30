@@ -116,8 +116,8 @@ def prototypical_loss(model, support, query, support_labels, query_labels):
 # Train
 # Set training parameters
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-model = AdvancedCNN(num_classes=39).to(device)
-optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+protonet = AdvancedCNN(num_classes=39).to(device)
+optimizer = torch.optim.Adam(protonet.parameters(), lr=1e-3)
 num_epochs = 100
 patience = 5
 
@@ -125,7 +125,7 @@ wandb.init(project="ProtoNetTraining1")
 best_loss = float('inf')
 wait = 0
 for epoch in range(num_epochs):
-    model.train()
+    protonet.train()
     total_loss = 0
 
     for episode in train_loader:
@@ -161,7 +161,7 @@ for epoch in range(num_epochs):
 
         # Train step
         optimizer.zero_grad()
-        loss = prototypical_loss(model, support_images, query_images, support_labels, query_labels)
+        loss = prototypical_loss(protonet, support_images, query_images, support_labels, query_labels)
         loss.backward()
         optimizer.step()
 
@@ -173,7 +173,7 @@ for epoch in range(num_epochs):
     if epoch_loss < best_loss:
         wait = 0
         best_loss = epoch_loss
-        torch.save(model.state_dict(), f'saved_models/Task2_testtraining.pth')  #TODO edit for final training!
+        torch.save(protonet.state_dict(), f'saved_models/Task2_protonet_trial.pth')  #TODO edit for final training!
     else:
         wait += 1
         if wait >= patience:
